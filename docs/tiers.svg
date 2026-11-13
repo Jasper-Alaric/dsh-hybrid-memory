@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="dsh-hybrid-memory tiers">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071f1d"/>
+      <stop offset="1" stop-color="#0d2c28"/>
+    </linearGradient>
+    <style>
+      .title { fill: #f0fdfa; font-family: Inter, Segoe UI, sans-serif; font-size: 28px; font-weight: 800; }
+      .sub { fill: #8fb8b2; font-family: Inter, Segoe UI, sans-serif; font-size: 14px; }
+      .tier { font-family: Inter, Segoe UI, sans-serif; font-size: 20px; font-weight: 800; }
+      .body { fill: #d1fae5; font-family: Inter, Segoe UI, sans-serif; font-size: 13.5px; }
+      .muted { fill: #8fb8b2; font-family: Inter, Segoe UI, sans-serif; font-size: 12px; }
+    </style>
+  </defs>
+  <rect width="1200" height="520" fill="url(#bg)"/>
+  <text class="title" x="70" y="70">Tiered memory, refined over time</text>
+  <text class="sub" x="70" y="98">The top tier stays small: important facts and explicitly requested memories only.</text>
+
+  <g transform="translate(70 140)">
+    <path d="M 300 0 L 430 120 L 170 120 Z" fill="#134e4a" stroke="#2dd4bf" stroke-opacity="0.5"/>
+    <text class="tier" x="300" y="62" text-anchor="middle" fill="#fef3c7">CORE</text>
+    <text class="muted" x="300" y="86" text-anchor="middle" fill="#fde68a">⭐ pinned + importance ≥ 4</text>
+    <text class="muted" x="300" y="104" text-anchor="middle" fill="#b7a77a">default budget: 24 entries</text>
+
+    <path d="M 160 140 L 440 140 L 470 250 L 130 250 Z" fill="#0f3f3a" stroke="#2dd4bf" stroke-opacity="0.35"/>
+    <text class="tier" x="300" y="188" text-anchor="middle" fill="#ccfbf1">IMPORTANT</text>
+    <text class="body" x="300" y="214" text-anchor="middle">stable preferences · decisions · key facts</text>
+    <text class="muted" x="300" y="236" text-anchor="middle">default budget: 120 entries</text>
+
+    <path d="M 120 270 L 480 270 L 510 380 L 90 380 Z" fill="#0b2f2b" stroke="#2dd4bf" stroke-opacity="0.2"/>
+    <text class="tier" x="300" y="318" text-anchor="middle" fill="#a7c7c2">GENERAL</text>
+    <text class="body" x="300" y="344" text-anchor="middle">background context · low-salience facts</text>
+    <text class="muted" x="300" y="366" text-anchor="middle">default budget: 300 entries</text>
+  </g>
+
+  <g transform="translate(650 150)" font-family="Inter, Segoe UI, sans-serif">
+    <rect x="0" y="0" width="480" height="300" rx="18" fill="#0b2f2b" stroke="#2dd4bf" stroke-opacity="0.18"/>
+    <text x="28" y="42" fill="#5eead4" font-size="13" font-weight="700" letter-spacing="1.6">REFINEMENT RULES</text>
+
+    <circle cx="34" cy="82" r="4" fill="#34d399"/>
+    <text x="50" y="87" fill="#d1fae5" font-size="14">Core overflow → demote the oldest unpinned entry</text>
+    <circle cx="34" cy="120" r="4" fill="#34d399"/>
+    <text x="50" y="125" fill="#d1fae5" font-size="14">Important overflow → demote the oldest unpinned entry</text>
+    <circle cx="34" cy="158" r="4" fill="#34d399"/>
+    <text x="50" y="163" fill="#d1fae5" font-size="14">General overflow → drop the oldest unpinned entry</text>
+    <circle cx="34" cy="196" r="4" fill="#fbbf24"/>
+    <text x="50" y="201" fill="#fde68a" font-size="14">⭐ pinned entries are never demoted automatically</text>
+    <circle cx="34" cy="234" r="4" fill="#5eead4"/>
+    <text x="50" y="239" fill="#d1fae5" font-size="14">Budgets are editable in Settings → Hybrid memory</text>
+    <text x="28" y="280" fill="#6b9a94" font-size="12">Manual edits are re-parsed on the next read or search.</text>
+  </g>
+</svg>

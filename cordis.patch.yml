@@ -1,0 +1,8 @@
+# DSH bundle patch: one Host row plus the package's Client half.
+# The package name must equal the installed bundle package.
+- insert:
+    - id: hybrid-memory
+      name: '@jasper_alaric/dsh-hybrid-memory'
+      config:
+        # Empty follows $DSH_HOME/hybrid_memory (or ~/.dsh/hybrid_memory).
+        storageDir: ''

@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="dsh-hybrid-memory cover">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071f1d"/>
+      <stop offset="0.55" stop-color="#0b2f2b"/>
+      <stop offset="1" stop-color="#123f3a"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f0fdfa"/>
+      <stop offset="1" stop-color="#99f6e4"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#134e4a"/>
+      <stop offset="1" stop-color="#0f3f3a"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#2dd4bf" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <circle cx="1040" cy="80" r="190" fill="#2dd4bf" opacity="0.08"/>
+  <circle cx="1130" cy="520" r="230" fill="#fbbf24" opacity="0.06"/>
+
+  <g transform="translate(76 82)">
+    <rect x="0" y="0" width="150" height="34" rx="17" fill="#0f766e" stroke="#2dd4bf" stroke-opacity="0.45"/>
+    <text x="75" y="22" text-anchor="middle" fill="#ccfbf1" font-family="Inter, Segoe UI, sans-serif" font-size="13" font-weight="700" letter-spacing="2">DSH PLUGIN</text>
+
+    <text x="0" y="112" fill="url(#title)" font-family="Inter, Segoe UI, sans-serif" font-size="62" font-weight="800" letter-spacing="-2">dsh-hybrid-memory</text>
+    <text x="0" y="160" fill="#99f6e4" font-family="Inter, Segoe UI, sans-serif" font-size="24" font-weight="500">Transparent long-term memory for DeepSeek Harness</text>
+    <text x="0" y="198" fill="#a7c7c2" font-family="Inter, Segoe UI, sans-serif" font-size="18">Markdown you can read. A background loop you can trust.</text>
+
+    <g transform="translate(0 246)" font-family="Inter, Segoe UI, sans-serif" font-size="15" font-weight="600">
+      <rect x="0" y="0" width="118" height="38" rx="19" fill="#0b2f2b" stroke="#2dd4bf" stroke-opacity="0.35"/>
+      <text x="59" y="24" text-anchor="middle" fill="#ccfbf1">Markdown</text>
+      <rect x="130" y="0" width="98" height="38" rx="19" fill="#0b2f2b" stroke="#2dd4bf" stroke-opacity="0.35"/>
+      <text x="179" y="24" text-anchor="middle" fill="#ccfbf1">Tiered</text>
+      <rect x="240" y="0" width="88" height="38" rx="19" fill="#0b2f2b" stroke="#2dd4bf" stroke-opacity="0.35"/>
+      <text x="284" y="24" text-anchor="middle" fill="#ccfbf1">BM25</text>
+      <rect x="340" y="0" width="122" height="38" rx="19" fill="#0b2f2b" stroke="#2dd4bf" stroke-opacity="0.35"/>
+      <text x="401" y="24" text-anchor="middle" fill="#ccfbf1">Heartbeat</text>
+      <rect x="474" y="0" width="126" height="38" rx="19" fill="#0b2f2b" stroke="#fbbf24" stroke-opacity="0.45"/>
+      <text x="537" y="24" text-anchor="middle" fill="#fde68a">Persona</text>
+    </g>
+
+    <g transform="translate(0 348)" font-family="Inter, Segoe UI, sans-serif">
+      <rect x="0" y="0" width="510" height="76" rx="14" fill="#0b2f2b" stroke="#2dd4bf" stroke-opacity="0.18"/>
+      <circle cx="26" cy="24" r="6" fill="#34d399"/>
+      <text x="42" y="29" fill="#d1fae5" font-size="15" font-weight="700">User-editable files</text>
+      <text x="42" y="51" fill="#8fb8b2" font-size="13">SOUL.md · USER.md · AGENT.md · AGENTS.md · MEMORY.md</text>
+      <text x="42" y="68" fill="#8fb8b2" font-size="13">Open in Notepad. Diff it. Back it up. Own it.</text>
+    </g>
+  </g>
+
+  <g transform="translate(700 90)">
+    <rect x="0" y="0" width="430" height="450" rx="26" fill="#082522" stroke="#2dd4bf" stroke-opacity="0.22"/>
+    <text x="28" y="44" fill="#5eead4" font-family="Inter, Segoe UI, sans-serif" font-size="13" font-weight="700" letter-spacing="2">YOUR MEMORY FOLDER</text>
+
+    <g transform="translate(28 72)" font-family="Inter, Segoe UI, sans-serif">
+      <rect x="0" y="0" width="374" height="66" rx="12" fill="url(#card)" stroke="#2dd4bf" stroke-opacity="0.25"/>
+      <text x="18" y="27" fill="#f0fdfa" font-size="15" font-weight="700">SOUL.md</text>
+      <text x="18" y="48" fill="#8fb8b2" font-size="12">identity · values · voice</text>
+      <text x="340" y="38" fill="#5eead4" font-size="18" text-anchor="end">◈</text>
+
+      <rect x="0" y="78" width="374" height="66" rx="12" fill="url(#card)" stroke="#2dd4bf" stroke-opacity="0.25"/>
+      <text x="18" y="105" fill="#f0fdfa" font-size="15" font-weight="700">USER.md</text>
+      <text x="18" y="126" fill="#8fb8b2" font-size="12">profile · preferences</text>
+      <text x="340" y="116" fill="#5eead4" font-size="18" text-anchor="end">◈</text>
+
+      <rect x="0" y="156" width="374" height="66" rx="12" fill="url(#card)" stroke="#fbbf24" stroke-opacity="0.35"/>
+      <text x="18" y="183" fill="#fef3c7" font-size="15" font-weight="700">MEMORY.md</text>
+      <text x="18" y="204" fill="#b7a77a" font-size="12">Core ⭐ · Important · General</text>
+      <text x="340" y="194" fill="#fbbf24" font-size="18" text-anchor="end">◈</text>
+
+      <rect x="0" y="234" width="374" height="66" rx="12" fill="url(#card)" stroke="#2dd4bf" stroke-opacity="0.2"/>
+      <text x="18" y="261" fill="#f0fdfa" font-size="15" font-weight="700">HEARTBEAT.md</text>
+      <text x="18" y="282" fill="#8fb8b2" font-size="12">proactive checklist</text>
+      <text x="340" y="272" fill="#5eead4" font-size="18" text-anchor="end">◈</text>
+
+      <rect x="0" y="328" width="374" height="54" rx="12" fill="#0b2f2b" stroke="#2dd4bf" stroke-opacity="0.16"/>
+      <text x="18" y="352" fill="#a7c7c2" font-size="12">BM25 index · settings.json · state.json</text>
+      <text x="18" y="370" fill="#6b9a94" font-size="11">derived cache, never the source of truth</text>
+    </g>
+  </g>
+
+  <g transform="translate(76 566)" font-family="Inter, Segoe UI, sans-serif">
+    <text x="0" y="0" fill="#6b9a94" font-size="13">DeepSeek Harness · Host + Web bundle · npm @jasper_alaric/dsh-hybrid-memory</text>
+    <text x="1048" y="0" fill="#5eead4" font-size="13" font-weight="700">⛄ 阿夙</text>
+  </g>
+</svg>

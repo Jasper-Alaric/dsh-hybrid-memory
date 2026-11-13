@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-label="dsh-hybrid-memory architecture">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071f1d"/>
+      <stop offset="1" stop-color="#0d2c28"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5eead4"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#fbbf24"/>
+    </marker>
+    <style>
+      .box { fill: #0b2f2b; stroke: #2dd4bf; stroke-opacity: .28; }
+      .boxAmber { fill: #2a2414; stroke: #fbbf24; stroke-opacity: .34; }
+      .label { fill: #f0fdfa; font-family: Inter, Segoe UI, sans-serif; font-size: 17px; font-weight: 700; }
+      .sub { fill: #8fb8b2; font-family: Inter, Segoe UI, sans-serif; font-size: 12.5px; }
+      .tiny { fill: #6b9a94; font-family: Inter, Segoe UI, sans-serif; font-size: 11.5px; }
+      .line { stroke: #5eead4; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .lineAmber { stroke: #fbbf24; stroke-width: 2; fill: none; marker-end: url(#arrowAmber); }
+    </style>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <text x="70" y="70" fill="#f0fdfa" font-family="Inter, Segoe UI, sans-serif" font-size="30" font-weight="800">How dsh-hybrid-memory works</text>
+  <text x="70" y="98" fill="#8fb8b2" font-family="Inter, Segoe UI, sans-serif" font-size="15">One background loop. One transparent source of truth. On-demand retrieval instead of full injection.</text>
+
+  <g>
+    <rect class="box" x="70" y="150" width="250" height="104" rx="14"/>
+    <text class="label" x="92" y="184">Session events</text>
+    <text class="sub" x="92" y="208">user / assistant messages</text>
+    <text class="sub" x="92" y="228">committed, bounded, deduped</text>
+  </g>
+
+  <path class="line" d="M 320 202 C 380 202, 390 202, 440 202"/>
+  <g>
+    <rect class="box" x="440" y="150" width="270" height="104" rx="14"/>
+    <text class="label" x="462" y="184">Async extraction worker</text>
+    <text class="sub" x="462" y="208">single concurrency · retry/backoff</text>
+    <text class="sub" x="462" y="228">never blocks the main conversation</text>
+  </g>
+
+  <path class="line" d="M 710 202 C 760 202, 770 202, 810 202"/>
+  <g>
+    <rect class="boxAmber" x="810" y="150" width="320" height="104" rx="14"/>
+    <text class="label" x="832" y="184">USER.md · MEMORY.md</text>
+    <text class="sub" x="832" y="208">dedupe → tier → budget → refine</text>
+    <text class="sub" x="832" y="228">atomic Markdown writes</text>
+  </g>
+
+  <g>
+    <rect class="box" x="70" y="330" width="300" height="124" rx="14"/>
+    <text class="label" x="92" y="364">System prompt section</text>
+    <text class="sub" x="92" y="388">SOUL.md · USER.md</text>
+    <text class="sub" x="92" y="408">AGENT.md · AGENTS.md</text>
+    <text class="tiny" x="92" y="430">silent injection; bounded by maxChars</text>
+  </g>
+
+  <path class="line" d="M 370 392 C 410 392, 420 392, 456 392"/>
+  <g>
+    <rect class="box" x="456" y="330" width="280" height="124" rx="14"/>
+    <text class="label" x="478" y="364">Agent</text>
+    <text class="sub" x="478" y="388">memory_read · memory_search</text>
+    <text class="sub" x="478" y="408">memory_update · persona_update</text>
+    <text class="tiny" x="478" y="430">tools, not prompt stuffing</text>
+  </g>
+
+  <path class="lineAmber" d="M 736 392 C 776 392, 786 392, 822 392"/>
+  <g>
+    <rect class="boxAmber" x="822" y="330" width="308" height="124" rx="14"/>
+    <text class="label" x="844" y="364">MEMORY.md + BM25 index</text>
+    <text class="sub" x="844" y="388">CJK bigrams + Latin words</text>
+    <text class="sub" x="844" y="408">Core / Important / General boost</text>
+    <text class="tiny" x="844" y="430">on-demand retrieval, no full injection</text>
+  </g>
+
+  <g>
+    <rect class="box" x="70" y="530" width="290" height="112" rx="14"/>
+    <text class="label" x="92" y="564">Heartbeat</text>
+    <text class="sub" x="92" y="588">maintenance · idle extraction</text>
+    <text class="sub" x="92" y="608">optional proactive wake, cooldown</text>
+  </g>
+
+  <path class="line" d="M 360 586 C 420 586, 430 586, 466 586"/>
+  <g>
+    <rect class="box" x="466" y="530" width="280" height="112" rx="14"/>
+    <text class="label" x="488" y="564">Tier refinement</text>
+    <text class="sub" x="488" y="588">Core → Important → General</text>
+    <text class="sub" x="488" y="608">⭐ pinned entries are never demoted</text>
+  </g>
+
+  <path class="line" d="M 746 586 C 800 586, 810 586, 846 586"/>
+  <g>
+    <rect class="box" x="846" y="530" width="284" height="112" rx="14"/>
+    <text class="label" x="868" y="564">Settings + sidebar UI</text>
+    <text class="sub" x="868" y="588">same-origin HTTP API</text>
+    <text class="sub" x="868" y="608">per-file Load / Inject switches</text>
+  </g>
+
+  <text x="70" y="690" fill="#6b9a94" font-family="Inter, Segoe UI, sans-serif" font-size="12">Markdown is the source of truth; the BM25 index and JSON sidecars are derived caches.</text>
+</svg>
