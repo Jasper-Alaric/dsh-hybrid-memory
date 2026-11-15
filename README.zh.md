@@ -88,6 +88,7 @@ Session events
 | `AGENT.md` | 当前 Agent 的自我模型与工作规则 | 注入 |
 | `AGENTS.md` | 多 Agent / 团队协作约定 | 注入 |
 | `MEMORY.md` | 分层长期事实 | 只检索，不全量注入 |
+| `MEMORY.archive.md` | 超出 `General` 预算后归档的旧条目 | 不注入、不检索，仅审计 |
 | `HEARTBEAT.md` | 心跳唤醒时参考的主动工作清单 | 只检索 |
 | `settings.json` | 文件开关、提炼、心跳、预算 | 自动创建 |
 | `state.json` | 轮次计数、上次提炼、上次心跳、错误 | 自动创建 |
@@ -121,17 +122,19 @@ Session events
 1. `Core` 只放重要事实和明确“记住这个”的请求；提炼模型给出高重要性或 pin 才进入。
 2. `Core` 超出预算时，最旧的**未置顶**条目降级到 `Important`。
 3. `Important` 超出预算时，最旧的未置顶条目降级到 `General`。
-4. `General` 超出预算时，最旧的未置顶条目被清理。
-5. 带 `⭐` 的置顶条目不会被自动移动。
-6. 用户手动编辑后，下一次读取/检索会重新解析；文件始终是权威。
+4. `General` 超出预算时，最旧的未置顶条目会追加到 `MEMORY.archive.md`，不再静默删除。
+5. 带 `⭐` 的置顶条目不会被自动移动；某层全是置顶条目时，仍会继续检查更低层的预算。
+6. 提炼时注入的“现有记忆”包含全部 `Core` 和最新的低层条目，不会只截取文件开头。
+7. 用户手动编辑后，下一次读取/检索会重新解析；文件始终是权威。
+8. 总字符上限（默认 12,000）在条目预算仍不足以控制体量时，先归档最旧的 General 条目，再归档最旧的未置顶 Important 条目。
 
-默认预算：`Core 24`、`Important 120`、`General 300`，都可以在 UI 里修改。
+默认预算：`Core 8`、`Important 40`、`General 80`，外加 `12,000` 字符总上限，都可以在 UI 里修改。
 
 ---
 
 ## 七、后台提炼
 
-worker 只读取已提交的 `user/message` 和 `assistant/message`，按消息数和字符预算截断；默认跳过插件通知、工具噪音和 subagent 会话。
+worker 只读取已提交的 `user/message` 和 `assistant/message`，按消息数和字符预算分批处理；每批从最旧的未处理消息开始，只提交到本批最后一条消息的 seq，装不下的消息留给下一批，不会被跳过。默认跳过插件通知、工具噪音和 subagent 会话。
 
 触发时机：
 
@@ -319,7 +322,7 @@ Loader row 只带 `storageDir`：
     "wakeCooldownMinutes": 180,
     "prompt": ""
   },
-  "budgets": { "core": 24, "important": 120, "general": 300 },
+  "budgets": { "core": 8, "important": 40, "general": 80, "totalChars": 12000 },
   "ui": { "sidebar": false }
 }
 ```
@@ -357,7 +360,7 @@ node --test tests/*.test.mjs
 - 工具 Schema 结构；
 - fake-Cordis 激活冒烟测试。
 
-当前版本：**11 个测试通过**。
+当前版本：**17 个测试通过**。
 
 ---
 

@@ -17,7 +17,7 @@ import {
   tierCounts,
 } from '../lib/memory.js'
 import { buildIndex, searchIndex, tokenize } from '../lib/search.js'
-import { collectTranscript, isDuplicateEntry, parseExtractionResponse } from '../lib/extract.js'
+import { buildExistingMemoryDigest, collectTranscript, isDuplicateEntry, parseExtractionResponse } from '../lib/extract.js'
 import { HybridMemoryStore } from '../lib/store.js'
 import { registerTools } from '../lib/tools.js'
 
@@ -46,6 +46,7 @@ test('store creates all Markdown files and default settings on first use', async
     assert.equal(snapshot.files.length, 6)
     assert.equal(snapshot.settings.heartbeat.enabled, true)
     assert.equal(snapshot.settings.files.memory.inject, false)
+    assert.deepEqual(snapshot.settings.budgets, { core: 8, important: 40, general: 80, totalChars: 12000 })
   })
 })
 
@@ -133,9 +134,87 @@ test('transcript includes only human and assistant messages and detects remember
   assert.doesNotMatch(transcript.text, /系统通知/)
 })
 
+test('extraction items are capped at the entry character limit', () => {
+  const parsed = parseExtractionResponse(JSON.stringify({ facts: [{ text: '长'.repeat(500), tier: 'general' }] }))
+  assert.equal(parsed.facts[0].text.length, 300)
+})
+
 test('duplicate detection is case and punctuation tolerant', () => {
   assert.equal(isDuplicateEntry('用户喜欢简洁回答。', ['用户喜欢简洁回答']), true)
   assert.equal(isDuplicateEntry('用户喜欢中文回复', ['用户喜欢简洁回答']), false)
+})
+
+test('existing-memory digest keeps Core and the newest non-Core entries', () => {
+  let content = '# MEMORY\n\n## Core\n\n## Important\n\n## General\n'
+  content = appendMemoryEntry(content, 'core', '身份：阿夙', true)
+  content = appendMemoryEntry(content, 'important', `旧条目${'旧'.repeat(80)}`)
+  content = appendMemoryEntry(content, 'important', '最新的重要条目')
+  content = appendMemoryEntry(content, 'general', '最新的一般条目')
+  const digest = buildExistingMemoryDigest(content, 120)
+  assert.match(digest, /身份：阿夙/)
+  assert.match(digest, /最新的重要条目/)
+  assert.match(digest, /最新的一般条目/)
+  assert.doesNotMatch(digest, /旧旧旧/)
+  assert.match(digest, /older non-core entries omitted/)
+})
+
+test('transcript batches from the oldest message and reports a safe lastSeq', () => {
+  const events = Array.from({ length: 11 }, (_, index) => ({
+    type: 'user/message',
+    seq: index + 1,
+    data: { source: { kind: 'user' }, content: [{ type: 'text', text: `消息${index + 1}` }] },
+  }))
+  const first = collectTranscript(events, { maxMessages: 5, maxChars: 4000 })
+  assert.equal(first.messageCount, 5)
+  assert.equal(first.firstSeq, 1)
+  assert.equal(first.lastSeq, 5)
+  assert.equal(first.hasMore, true)
+  assert.doesNotMatch(first.text, /消息6/)
+  const second = collectTranscript(events.slice(5), { maxMessages: 5, maxChars: 4000 })
+  assert.equal(second.firstSeq, 6)
+  assert.equal(second.lastSeq, 10)
+  assert.equal(second.hasMore, true)
+})
+
+test('all-pinned Core overflow still lets lower tiers refine', () => {
+  let content = '# MEMORY\n\n## Core\n\n## Important\n\n## General\n'
+  content = appendMemoryEntry(content, 'core', 'pin a', true)
+  content = appendMemoryEntry(content, 'core', 'pin b', true)
+  content = appendMemoryEntry(content, 'important', 'imp a')
+  content = appendMemoryEntry(content, 'important', 'imp b')
+  const result = refineMemory(content, { core: 1, important: 1, general: 300 })
+  assert.equal(result.counts.core, 2)
+  assert.equal(result.counts.important, 1)
+  assert.equal(result.counts.general, 1)
+  assert.match(result.content, /⭐ pin a/)
+})
+
+test('General overflow is archived before it leaves MEMORY.md', async () => {
+  await withStore(async (store, dir) => {
+    await store.updateSettings({ budgets: { general: 5 } })
+    for (let index = 1; index <= 6; index += 1) {
+      await store.appendEntry('memory', { content: `一般条目${index}`, tier: 'general' })
+    }
+    const result = await store.refineTiers()
+    assert.equal(result.changed, true)
+    assert.equal(result.counts.general, 5)
+    assert.equal(result.dropped.length, 1)
+    assert.equal(result.archived, true)
+    const archive = await readFile(path.join(dir, 'MEMORY.archive.md'), 'utf8')
+    assert.match(archive, /一般条目1/)
+    assert.match(archive, /ARCHIVE/)
+  })
+})
+
+test('total character budget archives the oldest General entries', () => {
+  let content = '# MEMORY\n\n## Core\n\n## Important\n\n## General\n'
+  content = appendMemoryEntry(content, 'general', `旧${'字'.repeat(599)}`)
+  content = appendMemoryEntry(content, 'general', `新${'字'.repeat(599)}`)
+  const result = refineMemory(content, { core: 8, important: 40, general: 80, totalChars: 1000 })
+  assert.equal(result.counts.general, 1)
+  assert.equal(result.dropped.length, 1)
+  assert.match(result.content, /新/)
+  assert.doesNotMatch(result.content, /旧/)
 })
 
 test('store round-trips settings, state, and search', async () => {

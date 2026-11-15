@@ -88,6 +88,7 @@ The plugin creates these files on first use:
 | `AGENT.md` | Operating rules and self-model for this agent | Injected |
 | `AGENTS.md` | Multi-agent / team collaboration conventions | Injected |
 | `MEMORY.md` | Tiered long-term facts | Search-only; not injected in full |
+| `MEMORY.archive.md` | Old entries archived after `General` overflow | Not injected or searched; audit only |
 | `HEARTBEAT.md` | Proactive checklist used when a heartbeat wakes the agent | Search-only |
 | `settings.json` | Per-file switches, extraction, heartbeat, budgets | Auto-created |
 | `state.json` | Turn counters, last extraction, last heartbeat, errors | Auto-created |
@@ -121,17 +122,19 @@ Rules:
 1. `Core` is for important facts and explicit “remember this” requests. The extraction prompt only promotes items with high importance or a pin.
 2. When `Core` exceeds its budget, the oldest **unpinned** entry is demoted to `Important`.
 3. When `Important` exceeds its budget, the oldest unpinned entry moves to `General`.
-4. When `General` exceeds its budget, the oldest unpinned entry is dropped.
-5. `⭐` pinned entries are never moved automatically.
-6. Manual edits are re-parsed on the next read or search; the file remains the authority.
+4. When `General` exceeds its budget, the oldest unpinned entry is appended to `MEMORY.archive.md` instead of being dropped silently.
+5. `⭐` pinned entries are never moved automatically; when a tier is entirely pinned, lower tiers are still refined.
+6. The extraction context includes all `Core` entries plus the newest lower-tier entries, not just the head of the file.
+7. Manual edits are re-parsed on the next read or search; the file remains the authority.
+8. A total-character cap (default 12,000) archives the oldest General entries, then the oldest unpinned Important entries, once entry budgets alone would leave the corpus too large.
 
-Default budgets: `Core 24`, `Important 120`, `General 300`. All are editable in the UI.
+Default budgets: `Core 8`, `Important 40`, `General 80`, plus a `12,000` character total cap. All are editable in the UI.
 
 ---
 
 ## Background extraction
 
-The worker reads only committed `user/message` and `assistant/message` events, bounded by message count and character budget. It skips plugin notices, tool noise, and subagent sessions by default.
+The worker reads only committed `user/message` and `assistant/message` events, processing them in count- and character-bounded batches. Each batch starts at the oldest unprocessed message and commits only through the last message it actually processed, so anything that does not fit waits for the next batch instead of being skipped. It skips plugin notices, tool noise, and subagent sessions by default.
 
 Triggers:
 
@@ -313,7 +316,7 @@ Everything else lives in `settings.json` and is editable in the UI:
     "wakeCooldownMinutes": 180,
     "prompt": ""
   },
-  "budgets": { "core": 24, "important": 120, "general": 300 },
+  "budgets": { "core": 8, "important": 40, "general": 80, "totalChars": 12000 },
   "ui": { "sidebar": false }
 }
 ```
@@ -351,7 +354,7 @@ The suite covers:
 - tool-schema shape;
 - a fake-Cordis activation smoke test.
 
-Current release: **11 tests passing**.
+Current release: **17 tests passing**.
 
 ---
 
