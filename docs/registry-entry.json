@@ -8,5 +8,5 @@
     "zh": "为 DeepSeek Harness 提供透明的 Markdown 长期记忆：分层事实、后台提炼、BM25 检索、人格编辑与心跳。"
   },
   "npm": "@jasper_alaric/dsh-hybrid-memory",
-  "version": "1.0.4"
+  "version": "1.0.5"
 }

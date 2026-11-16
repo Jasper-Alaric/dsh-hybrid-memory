@@ -18,6 +18,7 @@ import {
 } from '../lib/memory.js'
 import { buildIndex, searchIndex, tokenize } from '../lib/search.js'
 import { buildExistingMemoryDigest, collectTranscript, isDuplicateEntry, parseExtractionResponse } from '../lib/extract.js'
+import { HybridMemoryService, heartbeatMessage } from '../lib/service.js'
 import { HybridMemoryStore } from '../lib/store.js'
 import { registerTools } from '../lib/tools.js'
 
@@ -125,13 +126,57 @@ test('transcript includes only human and assistant messages and detects remember
   const transcript = collectTranscript([
     { type: 'user/message', seq: 1, data: { source: { kind: 'user' }, content: [{ type: 'text', text: '请记住：我喜欢深色模式。' }] } },
     { type: 'assistant/message', seq: 2, data: { message: { content: [{ type: 'text', text: '好的，我会记住。' }] } } },
-    { type: 'user/message', seq: 3, data: { source: { kind: 'plugin', plugin: 'heartbeat' }, content: [{ type: 'text', text: '系统通知' }] } },
+    { type: 'user/message', seq: 3, data: { source: { kind: 'hybrid-memory' }, content: [{ type: 'text', text: '系统通知' }] } },
     { type: 'tool/call', seq: 4, data: { name: 'read' } },
   ], { maxMessages: 10, maxChars: 4000 })
   assert.equal(transcript.messageCount, 2)
   assert.equal(transcript.remembers.length, 1)
   assert.match(transcript.text, /ASSISTANT: 好的/)
   assert.doesNotMatch(transcript.text, /系统通知/)
+})
+
+test('heartbeat wake message carries a source kind that session format v4 admits', async () => {
+  const message = heartbeatMessage('[Heartbeat] self-check')
+  assert.equal(message.role, 'user')
+  assert.equal(typeof message.id, 'string')
+  // Format v4 refuses the retired `plugin` kind in durable message slots; a
+  // rejected row wedges every later turn of the woken session.
+  assert.equal(message.source.kind, 'hybrid-memory')
+  assert.notEqual(message.source.kind, 'plugin')
+
+  const delivered = []
+  const ctx = {
+    logger: { info() {}, warn() {}, error() {} },
+    get(name) {
+      if (name !== 'agents') return undefined
+      return {
+        list: () => [{
+          id: 'session-wake',
+          status: 'idle',
+          session: { id: 'session-wake', header: {} },
+          followup: (woke) => { delivered.push(woke) },
+        }],
+      }
+    },
+  }
+  const store = {
+    state: { lastWakeAt: null, sessions: {} },
+    settings: {
+      extraction: { includeSubagents: false },
+      heartbeat: { proactive: true, intervalMinutes: 30, wakeCooldownMinutes: 180, prompt: '' },
+    },
+    stateForSession: () => ({ lastUserAt: new Date().toISOString(), lastActivityAt: new Date().toISOString() }),
+    scheduleStateSave() {},
+    recordError() {},
+  }
+  const service = new HybridMemoryService(ctx, store)
+  try {
+    assert.equal(await service.wakeOneIdleAgent(store.settings.heartbeat), 'session-wake')
+  } finally {
+    await service.close()
+  }
+  assert.equal(delivered.length, 1)
+  assert.equal(delivered[0].source.kind, 'hybrid-memory')
 })
 
 test('extraction items are capped at the entry character limit', () => {

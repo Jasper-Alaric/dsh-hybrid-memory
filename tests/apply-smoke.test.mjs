@@ -9,6 +9,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { apply } from '../index.js'
+import { registerHttp } from '../lib/http.js'
 
 function makeFakeContext(state) {
   const services = {}
@@ -48,7 +49,10 @@ function makeFakeContext(state) {
         }
         return services.systemPrompt
       }
-      if (name === 'connection') return { authorizeIndex: () => true }
+      if (name === 'connection') {
+        services.connection ??= { requestRejection: () => state.rejection }
+        return services.connection
+      }
       return undefined
     },
     inject(names, callback) {
@@ -128,4 +132,47 @@ test('apply registers tools, prompt, routes, listeners, and storage', async () =
     else process.env.DSH_HOME = previousHome
     await rm(dir, { recursive: true, force: true })
   }
+})
+
+test('HTTP routes reject before dispatch when requestRejection refuses', async () => {
+  const routes = []
+  const web = {
+    register(route) {
+      routes.push(route)
+      return () => {}
+    },
+  }
+  const ctx = {
+    logger: { info() {}, warn() {}, error() {} },
+    get(name) {
+      return name === 'connection' ? { requestRejection: () => 403 } : undefined
+    },
+    inject(names, callback) {
+      callback(ctx)
+    },
+    effect(callback) {
+      const generator = callback()
+      let step = generator.next()
+      while (!step.done) step = generator.next()
+      return () => {}
+    },
+  }
+  Object.defineProperty(ctx, 'webServer', { get: () => web })
+  registerHttp(ctx, {}, { status: () => ({}) })
+  assert.equal(routes.length, 8)
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      this.statusCode = status
+      this.headers = headers
+      this.headersSent = true
+    },
+    end() {},
+    destroy() {},
+  }
+  routes[0].handler({ method: 'GET', url: routes[0].path, headers: { host: 'evil.example' } }, res)
+  await new Promise(resolve => setTimeout(resolve, 20))
+  assert.equal(res.statusCode, 403)
+  assert.equal(res.headers['cache-control'], 'no-store')
 })

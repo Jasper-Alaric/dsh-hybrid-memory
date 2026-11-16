@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5 — 2026-11-16
+
+- Fix: the heartbeat wake message used the retired `plugin` message-source kind, which Session format v4 refuses in durable message slots. A refused row wedges the woken Session, so every later turn in it failed with `format v4 message requires a producer-owned source kind` until the Host restarted. The message now names its own producer kind (`hybrid-memory`), matching the `goal` and `schedule` producers.
+- Security: every HTTP route now calls `ctx.connection.requestRejection(req)` before dispatch, so DSH's Host/Origin fence and browser-session authentication apply. `authorizeIndex` alone authenticated the page but did not check Host/Origin.
+
 ## 1.0.4 — 2026-11-15
 
 - Keep all `Core` entries and the newest lower-tier entries in the extraction context instead of head-truncating `MEMORY.md`.

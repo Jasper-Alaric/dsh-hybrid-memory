@@ -330,7 +330,7 @@ Everything else lives in `settings.json` and is editable in the UI:
 - Malformed `settings.json` / `state.json` fall back to defaults and record an error.
 - Tool, prompt-section, and HTTP-route registrations are individually wrapped; one failure does not stop the plugin.
 - Tool schemas are strict JSON Schema with string types and descriptions.
-- HTTP routes use the same-origin `connection.authorizeIndex` check as the GUI; no CORS, no token in the page.
+- HTTP routes call `connection.requestRejection(req)` before dispatch, applying DSH's Host/Origin fence and browser-session authentication; no CORS, no token in the page.
 - File IDs are whitelisted; path traversal is rejected; request bodies and entry lengths are bounded.
 - Background extraction failures are recorded in `state.json` and retried with backoff; they never reject a conversation turn.
 

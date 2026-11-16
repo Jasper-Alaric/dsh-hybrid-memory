@@ -336,7 +336,7 @@ Loader row 只带 `storageDir`：
 - `settings.json` / `state.json` 损坏时回退默认值并记录错误。
 - 工具、Prompt section、HTTP 路由注册分别包裹；一个失败不会停止插件。
 - 工具 Schema 严格使用字符串类型与描述。
-- HTTP 路由复用 GUI 的 `connection.authorizeIndex` 浏览器会话校验；无 CORS、页面不接触 token。
+- HTTP 路由在分发前调用 `connection.requestRejection(req)`，应用 DSH 的 Host/Origin 栅栏与浏览器会话认证；无 CORS、页面不接触 token。
 - 文件 id 白名单，拒绝路径穿越；请求体大小、条目长度、文件大小都有上限。
 - 后台提炼失败写入 `state.json`，按退避重试；不会让对话 turn 失败。
 
