@@ -1,20 +1,22 @@
 {
   "name": "@jasper_alaric/dsh-hybrid-memory",
-  "version": "1.0.5",
-  "description": "Transparent Markdown long-term memory for DeepSeek Harness: tiered facts, background extraction, BM25 search, persona editing, and a heartbeat.",
+  "version": "1.1.0",
+  "description": "Transparent Markdown long-term memory for DeepSeek Harness: a bounded persona/profile prompt section, a tiered MEMORY.md retrieved with local BM25 instead of pasted every turn, background extraction that dedupes durable facts, atomic writes, a settings panel, and an optional heartbeat.",
   "keywords": [
     "dsh",
     "dsh-plugin",
     "deepseek-harness",
     "memory",
     "long-term-memory",
+    "agent-memory",
     "markdown",
     "bm25",
     "persona",
     "heartbeat"
   ],
   "license": "MIT",
-  "author": "jasper_alaric",
+  "author": "Jasper Alaric",
+  "icon": "docs/icon.png",
   "type": "module",
   "exports": {
     ".": "./index.js",
@@ -52,7 +54,8 @@
     }
   },
   "engines": {
-    "node": ">=24.9.0"
+    "node": ">=24.9.0",
+    "dsh": ">=0.2.2-rc.1 <0.3.0"
   },
   "publishConfig": {
     "access": "public",
@@ -60,10 +63,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nonenameless/dsh-hybrid-memory.git"
+    "url": "git+https://github.com/Jasper-Alaric/dsh-hybrid-memory.git"
   },
-  "homepage": "https://github.com/nonenameless/dsh-hybrid-memory#readme",
+  "homepage": "https://github.com/Jasper-Alaric/dsh-hybrid-memory#readme",
   "bugs": {
-    "url": "https://github.com/nonenameless/dsh-hybrid-memory/issues"
+    "url": "https://github.com/Jasper-Alaric/dsh-hybrid-memory/issues"
   }
 }

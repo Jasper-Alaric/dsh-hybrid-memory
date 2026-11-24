@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 — 2026-11-24
+
+- Publisher rename: the repository moved to `github.com/Jasper-Alaric/dsh-hybrid-memory` and the npm author is now **Jasper Alaric**; old links redirect.
+- Declare `engines.dsh` as `>=0.2.2-rc.1 <0.3.0`; verified against a running `0.2.2-rc.1` Host.
+- Add the manifest `icon` (`docs/icon.png`, 512×512) and a repository-level `screenshots.json` so market storefronts can show a tile and product shots.
+- Add raster `docs/cover.png`, `docs/tiers.png`, and `docs/architecture.png`; the tier diagram now reflects the current budgets and `MEMORY.archive.md`.
+- Expand the README (EN/ZH) with a “what hybrid means” rationale and an OpenClaw / Hermes / `dsh-hybrid-memory` capability matrix.
+- Longer npm and market descriptions; no runtime code changes.
+
 ## 1.0.5 — 2026-11-16
 
 - Fix: the heartbeat wake message used the retired `plugin` message-source kind, which Session format v4 refuses in durable message slots. A refused row wedges the woken Session, so every later turn in it failed with `format v4 message requires a producer-owned source kind` until the Host restarted. The message now names its own producer kind (`hybrid-memory`), matching the `goal` and `schedule` producers.

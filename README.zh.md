@@ -4,13 +4,13 @@
 [![license](https://img.shields.io/npm/l/@jasper_alaric/dsh-hybrid-memory)](LICENSE)
 [![node](https://img.shields.io/node/v/@jasper_alaric/dsh-hybrid-memory)](https://nodejs.org)
 [![dsh](https://img.shields.io/badge/DSH-plugin-0f766e)](https://github.com/deepseek-ai/deepseek-harness)
-[![GitHub](https://img.shields.io/badge/GitHub-nonenameless%2Fdsh--hybrid--memory-181717?logo=github)](https://github.com/nonenameless/dsh-hybrid-memory)
+[![GitHub](https://img.shields.io/badge/GitHub-Jasper--Alaric%2Fdsh--hybrid--memory-181717?logo=github)](https://github.com/Jasper-Alaric/dsh-hybrid-memory)
 
 **DeepSeek Harness 的透明 Markdown 长期记忆插件。**
 
 > 文件可读，后台可维护；记忆按需检索，而不是每轮全量塞进提示词。
 
-![dsh-hybrid-memory 封面](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.0.1/docs/cover.svg)
+![dsh-hybrid-memory 封面](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.1.0/docs/cover.png)
 
 ---
 
@@ -29,6 +29,22 @@ Agent 的长期记忆通常会坏在三个地方：
 - 后台 worker 自动提炼稳定的用户偏好和事实，去重、分层、精炼；
 - 心跳负责维护文件，并可选唤醒空闲 Agent，让它主动推进一小步。
 
+### 它和 OpenClaw / Hermes 的关系
+
+文件记忆和后台闭环通常只能二选一：
+
+- **OpenClaw 式文件记忆**：给你一个自己拥有的 Markdown 文件夹，可读、可 diff、可备份、可手改；代价是往往偏静态，只有人明确写入时才变化，而且常把整份文件注入上下文。
+- **Hermes 式后台闭环**：不需要提醒就持续更新记忆；代价是黑盒，事实进了内部存储或隐藏摘要，你只能选择相信循环。
+
+`dsh-hybrid-memory` 要的是两者的交集：产物仍是属于你的普通 Markdown，但由后台循环维护，大层记忆按需检索而不是全量注入。具体是：
+
+1. **一个有预算的画像片段**：`SOUL.md`、`USER.md`、`AGENT.md`、`AGENTS.md` 合并为一个系统提示片段，由 `injection.maxChars` 封顶。
+2. **三层而不是一个文件**：`Core` 小而稳，`Important` 放决定与偏好，`General` 放背景；溢出逐层下移，最后归档到 `MEMORY.archive.md`，不会静默删除。
+3. **检索可解释**：`memory_search` 返回文件、层级、行号、得分和摘要；没有 embedding 调用，每个命中都能回到文件核对。
+4. **后台写入可审计**：合并成功才提交 `throughSeq`；每次写入都是临时文件 + rename；失败写入 `state.json` 并退避重试。
+5. **闭环唤醒是安全的**：心跳使用 DSH Session format v4 认可的 producer-owned message kind，主动消息不会卡死会话。
+6. **全部可关**：每个文件独立 Load / Inject；提炼、心跳、侧边栏、预算都能分别关闭。
+
 ---
 
 ## 二、一眼看懂
@@ -43,6 +59,7 @@ Agent 的长期记忆通常会坏在三个地方：
 | **工具** | `memory_read`、`memory_search`、`memory_update`、`persona_update` |
 | **界面** | 设置页 + 可选侧边栏快捷面板 |
 | **心跳** | 维护、空闲提炼、可选主动唤醒（带冷却） |
+| **DSH** | 在 `0.2.2-rc.1` 实测；声明兼容 `>=0.2.2-rc.1 <0.3.0` |
 | **依赖** | 除 Node.js 内置模块与 DSH Host/Web 运行时外，无额外依赖 |
 
 ---
@@ -60,7 +77,7 @@ Agent 的长期记忆通常会坏在三个地方：
 
 ## 四、架构
 
-![架构图](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.0.1/docs/architecture.svg)
+![架构图](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.1.0/docs/architecture.png)
 
 ```text
 Session events
@@ -104,7 +121,7 @@ Session events
 
 ## 六、分层精炼
 
-![分层精炼](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.0.1/docs/tiers.svg)
+![分层精炼](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.1.0/docs/tiers.png)
 
 ```markdown
 ## Core
@@ -202,7 +219,7 @@ worker 只读取已提交的 `user/message` 和 `assistant/message`，按消息�
 
 ## 十、设置页与侧边栏
 
-![混合记忆设置页](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.0.1/docs/settings-panel.png)
+![混合记忆设置页](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.1.0/docs/settings-panel.png)
 
 设置 → **Hybrid memory**：
 
@@ -239,6 +256,19 @@ worker 只读取已提交的 `user/message` 和 `assistant/message`，按消息�
 
 代价：BM25 的语义泛化不如 embedding。对“上次说的那个方案”这类模糊指代，用关键词或让 Agent 先读相关文件更可靠。
 
+### OpenClaw、Hermes 与本插件
+
+| 能力 | OpenClaw 式文件记忆 | Hermes 式后台闭环 | `dsh-hybrid-memory` |
+|---|---|---|---|
+| 存储 | 文件夹里的 Markdown | 内部存储或摘要 | 文件夹里的 Markdown |
+| 可读 / 可改 / 可 diff | 是 | 通常不是 | 是 |
+| 自动更新 | 否 | 是 | 是 |
+| 提示词成本 | 往往整份注入 | 因实现而异 | 有预算的画像 + 按需检索 |
+| 检索 | grep 或读整份文件 | 由闭环内置 | 本地 BM25，带文件、行号、层级、得分 |
+| 分层与预算 | 无 | 隐式 | 显式 Core / Important / General + 归档 |
+| DSH 原生工具与 UI | 无 | 无 | 4 个工具 + 设置页 + 侧边栏 |
+| 失败处理 | 手动 | 因实现而异 | 原子写入、退避重试、注册兜底 |
+
 ### 对比静态 `AGENTS.md`
 
 - 记忆会后台更新；
@@ -246,9 +276,11 @@ worker 只读取已提交的 `user/message` 和 `assistant/message`，按消息�
 - 长期事实可检索，不必全量注入；
 - 分层让重要的部分保持小。
 
-### 对比 OpenClaw 与 Hermes
+### 在 OpenClaw 与 Hermes 之上多做了什么
 
-保留 OpenClaw 的**文件透明**，保留 Hermes 的**后台闭环**；再加上分层、BM25 检索、DSH 原生工具、设置页、侧边栏和防崩溃写入。
+- **来自 OpenClaw**：普通 Markdown 产物、用户所有权、手工纠错、diff 与备份。
+- **来自 Hermes**：不需要人提醒就持续维护记忆的后台闭环。
+- **本插件新增**：显式分层与预算、溢出归档到 `MEMORY.archive.md` 而不是静默删除、带中文分词的确定性 BM25 检索、有上限的提示词片段而不是全量注入、4 个严格 DSH 工具、可逐文件开关 Load/Inject 的设置页、可选侧边栏面板、带冷却的心跳、原子防崩溃写入，以及经过 Host/Origin 检查的 HTTP 接口。
 
 ---
 
@@ -360,7 +392,7 @@ node --test tests/*.test.mjs
 - 工具 Schema 结构；
 - fake-Cordis 激活冒烟测试。
 
-当前版本：**17 个测试通过**。
+当前版本：**19 个测试通过**。
 
 ---
 
@@ -376,4 +408,4 @@ node --test tests/*.test.mjs
 
 ## 十七、License
 
-MIT © 2026 jasper_alaric
+MIT © 2026 Jasper Alaric

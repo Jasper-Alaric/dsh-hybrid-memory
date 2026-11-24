@@ -4,13 +4,13 @@
 [![license](https://img.shields.io/npm/l/@jasper_alaric/dsh-hybrid-memory)](LICENSE)
 [![node](https://img.shields.io/node/v/@jasper_alaric/dsh-hybrid-memory)](https://nodejs.org)
 [![dsh](https://img.shields.io/badge/DSH-plugin-0f766e)](https://github.com/deepseek-ai/deepseek-harness)
-[![GitHub](https://img.shields.io/badge/GitHub-nonenameless%2Fdsh--hybrid--memory-181717?logo=github)](https://github.com/nonenameless/dsh-hybrid-memory)
+[![GitHub](https://img.shields.io/badge/GitHub-Jasper--Alaric%2Fdsh--hybrid--memory-181717?logo=github)](https://github.com/Jasper-Alaric/dsh-hybrid-memory)
 
 **Transparent Markdown long-term memory for DeepSeek Harness.**
 
 > Markdown you can read. A background loop you can trust. On-demand retrieval instead of full prompt stuffing.
 
-![dsh-hybrid-memory cover](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.0.1/docs/cover.svg)
+![dsh-hybrid-memory cover](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.1.0/docs/cover.png)
 
 ---
 
@@ -27,7 +27,25 @@ Long-term memory in agent systems usually fails in one of three ways:
 - `SOUL.md`, `USER.md`, `AGENT.md`, `AGENTS.md` are silently injected as a bounded system-prompt section.
 - `MEMORY.md` is **not** injected in full; it is indexed and queried through `memory_search` / `memory_read`.
 - A background worker extracts durable preferences and facts, merges them without duplicates, and refines the tiers.
-- A heartbeat maintains the files and can optionally wake an idle agent with a plugin-sourced follow-up.
+- A heartbeat maintains the files and can optionally wake an idle agent with a producer-owned message kind.
+
+---
+
+## What “hybrid” means here
+
+Most memory plugins pick one side of a trade-off:
+
+- **File-memory plugins (the OpenClaw lineage)** give you a folder of Markdown you own. That is a real advantage: you can read it, diff it, back it up, and hand-edit it. The usual cost is that the folder is static — it changes only when someone explicitly writes to it — and the file is often injected in full on every turn.
+- **Background-loop memory (the Hermes lineage)** keeps memory current without being asked. The usual cost is opacity: facts end up in a store or a hidden summary you cannot inspect, and you have to trust the loop.
+
+`dsh-hybrid-memory` keeps both halves: the artifacts stay plain Markdown in a folder you own, a background loop maintains them, and the large tier is retrieved on demand instead of injected. Concretely:
+
+1. **One bounded profile section.** `SOUL.md` + `USER.md` + `AGENT.md` + `AGENTS.md` are rendered into a single system-prompt section, capped by `injection.maxChars`.
+2. **Three tiers, not one file.** `Core` stays small and stable, `Important` holds decisions and preferences, `General` holds background. Overflow cascades down and finally into `MEMORY.archive.md`, so nothing is silently deleted.
+3. **Retrieval is explainable.** `memory_search` returns file, tier, line, score, and a snippet. There is no embedding call to reproduce or pay for, and every hit can be checked against the file.
+4. **Background writes are auditable.** Extraction commits only after a successful merge; every write is temp-file + rename; failures are recorded in `state.json` and retried with backoff.
+5. **The loop can wake the agent safely.** The heartbeat emits a producer-owned message kind that DSH Session format v4 accepts, so a proactive message cannot wedge the session.
+6. **Everything is switchable.** Each file has independent Load and Inject switches; extraction, heartbeat, the sidebar panel, and the budgets can be turned off separately.
 
 ---
 
@@ -43,6 +61,7 @@ Long-term memory in agent systems usually fails in one of three ways:
 | **Tools** | `memory_read`, `memory_search`, `memory_update`, `persona_update` |
 | **UI** | Settings section + optional sidebar quick-access panel |
 | **Heartbeat** | Maintenance, idle extraction, optional proactive wake with cooldown |
+| **DSH** | Tested on `0.2.2-rc.1`; declared compatible with `>=0.2.2-rc.1 <0.3.0` |
 | **Dependencies** | None beyond Node.js built-ins and the DSH Host/Web runtime |
 
 ---
@@ -60,7 +79,7 @@ Long-term memory in agent systems usually fails in one of three ways:
 
 ## Architecture
 
-![Architecture](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.0.1/docs/architecture.svg)
+![Architecture](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.1.0/docs/architecture.png)
 
 ```text
 Session events
@@ -104,7 +123,7 @@ The default is “all files loaded”; only persona/profile files are injected b
 
 ## Tiered memory
 
-![Tiered memory](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.0.1/docs/tiers.svg)
+![Tiered memory](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.1.0/docs/tiers.png)
 
 ```markdown
 ## Core
@@ -196,7 +215,7 @@ All tool schemas use a single string `type` per node, string `description`s, and
 
 ## Settings UI
 
-![Hybrid memory settings](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.0.1/docs/settings-panel.png)
+![Hybrid memory settings](https://cdn.jsdelivr.net/npm/@jasper_alaric/dsh-hybrid-memory@1.1.0/docs/settings-panel.png)
 
 Settings → **Hybrid memory** gives you:
 
@@ -225,6 +244,19 @@ An optional sidebar quick-access panel uses the same component. It is disabled b
 | Cloud memory assistants | Cross-device convenience | Cloud-owned, not local-first | Local files, native tools, user control |
 | MemGPT / Letta-style frameworks | Rich memory runtime | Heavy architecture, opaque to end users | Lightweight DSH-native bundle, readable files |
 
+### OpenClaw, Hermes, and this plugin
+
+| Capability | OpenClaw-style file memory | Hermes-style background loop | `dsh-hybrid-memory` |
+|---|---|---|---|
+| Storage | Markdown files in a folder | Internal store or summary | Markdown files in a folder |
+| Readable, editable, diffable | Yes | Usually no | Yes |
+| Updated automatically | No | Yes | Yes |
+| Prompt cost | Often the whole file | Varies by implementation | Bounded profile + on-demand retrieval |
+| Retrieval | grep or read the whole file | Built into the loop | Local BM25 with file, line, tier, score |
+| Tiers and budgets | No | Implicit | Explicit Core / Important / General + archive |
+| DSH-native tools and UI | No | No | 4 tools + Settings panel + sidebar |
+| Failure handling | Manual | Varies | Atomic writes, retry with backoff, guarded registration |
+
 ### Compared with a pure vector-memory agent
 
 - You can inspect, edit, diff, and back up every memory.
@@ -240,9 +272,11 @@ Trade-off: BM25 does not generalize paraphrases as well as embeddings. For “th
 - Long-term facts are searchable instead of fully injected.
 - Tiers keep the important part small.
 
-### Compared with OpenClaw and Hermes
+### What this adds on top of OpenClaw and Hermes
 
-It keeps OpenClaw’s **file transparency** and Hermes’s **background closure**, then adds tiering, BM25 retrieval, DSH-native tools, a settings page, a sidebar entry, and crash-safe writes.
+- **From OpenClaw:** plain Markdown artifacts, user ownership, manual correction, diff and backup.
+- **From Hermes:** a background loop that keeps the artifacts current without a human prompt.
+- **Added here:** explicit tiers and budgets, `MEMORY.archive.md` instead of silent deletion, deterministic BM25 retrieval with a Chinese tokenizer, a bounded prompt section instead of full injection, four strict DSH tools, a Settings page with per-file Load/Inject switches, an optional sidebar panel, a heartbeat with cooldown, atomic crash-safe writes, and a Host/Origin-checked HTTP surface.
 
 ---
 
@@ -354,7 +388,7 @@ The suite covers:
 - tool-schema shape;
 - a fake-Cordis activation smoke test.
 
-Current release: **17 tests passing**.
+Current release: **19 tests passing**.
 
 ---
 
@@ -370,4 +404,4 @@ Current release: **17 tests passing**.
 
 ## License
 
-MIT © 2026 jasper_alaric
+MIT © 2026 Jasper Alaric
